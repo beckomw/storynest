@@ -8,7 +8,7 @@ import { Auth0Provider } from "@auth0/auth0-react";
 import { StorynestProvider } from './context/StorynestContext.jsx';
 import Stories from './components/Stories.jsx';
 import Documentation from './components/Documentation.jsx';
-import Dashboard from './components/Dashboard.jsx';
+// import Dashboard from './components/Dashboard.jsx';
 import StoryForm from './pages/StoryForm.jsx';
 import Story from './pages/Story.jsx';
 import StoryEdit from './pages/StoryEdit.jsx';
@@ -20,7 +20,7 @@ const router = createBrowserRouter([
   { path: '/stories/:id/edit', element:  <div> <StoryEdit /> </div>, },
   { path: '/stories/create', element:  <div> <StoryForm /> </div>, },
   { path: '/documentation', element:  <div>  <Documentation /> </div>, },
-  { path: '/dashboard', element:  <div> <Dashboard /> </div>, }
+//  { path: '/dashboard', element:  <div> <Dashboard /> </div>, }
 ]);
 
 
