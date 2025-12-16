@@ -116,10 +116,17 @@ function Stories() {
                     cursor: "pointer",
                     backgroundColor:
                       hoveredStoryId === story.id ? "#e8effe" : "white",
-                    borderRadius: "5px",
-                    padding: "0px 10px",
-                    transition: "background 0.2s ease",
+                    borderRadius: "8px",
+                    padding: "10px 15px",
+                    margin: "8px 0",
+                    transition: "all 0.25s ease",
                     textAlign: "left",
+                    transform:
+                      hoveredStoryId === story.id ? "scale(1.02)" : "scale(1)",
+                    boxShadow:
+                      hoveredStoryId === story.id
+                        ? "0 4px 12px rgba(0, 0, 0, 0.15)"
+                        : "none",
                   }}
                   onClick={() => handleClick(story.id)}
                   onMouseEnter={() => setHoveredStoryId(story.id)}
