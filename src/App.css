@@ -44,8 +44,8 @@ body {
 }
 
 .parallax {
-  background-image: url('your-image-url.jpg'); /* Replace with your image URL */
-  height: 400px; /* Adjust as needed */
+  background-image: url('/assets/storynest.png');
+  height: 400px;
   background-attachment: fixed;
   background-size: cover;
   background-position: center;

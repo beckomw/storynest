@@ -1,239 +1,155 @@
-# StoryNest Project - By Jay Yong & Wayne Beckom
+# StoryNest
 
+A locally hosted platform for developers to share, discuss, and refine coding projects through interactive storytelling.
 
+![StoryNest](storynestimage.png)
 
-## How To install
+## Overview
 
-- Fork the repository and download zipped files <code>cd storynest</code>
-- Using a terminal run the command inside the storynest folder <code>docker-compose up --build</code>
-- To connect a data base or use the PostGreSQL database the instructions are in the server directory commented in the main.py file!
+StoryNest addresses the need for community-driven learning and problem-solving within smaller, private networks or organizations. By allowing users to create, tag, and interact with stories, StoryNest fosters a supportive environment where developers can connect, learn from one another, and gain feedback on their work.
 
+**Mission:** Empowering developers to collaborate, learn, and grow through the art of storytelling.
 
+**Vision:** To create a thriving community where every developer's journey is shared, celebrated, and enriched by collective knowledge.
+
+## Features
 
+### Core Features
+- **User Authentication** - Secure login via Auth0 with social providers and email authentication
+- **Story Management** - Full CRUD operations for creating, reading, updating, and deleting stories
+- **Story Feed** - Browse and discover stories from the community
+- **Comments** - Add, edit, and delete comments on stories
+- **Reactions** - Like and dislike stories to show your feedback
+- **Tags** - Categorize stories with tags for better organization
+
+### Coming Soon
+- User profiles and activity tracking
+- Search functionality for users and stories
+- Notifications system
+- Direct messaging between users
+- Export stories as PDF/Word documents
+
+## Tech Stack
+
+**Frontend:**
+- React 18
+- Vite
+- React Router DOM
+- Auth0 for authentication
+- Axios for API calls
+
+**Backend:**
+- Python (FastAPI)
+- PostgreSQL database
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- A running StoryNest backend server
+- Auth0 account for authentication
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/storynest.git
+   cd storynest
+   ```
 
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
+3. **Configure environment variables**
 
+   Copy the example environment file and fill in your values:
+   ```bash
+   cp .env.example .env
+   ```
 
+   Edit `.env` with your configuration:
+   ```env
+   VITE_AUTH0_DOMAIN=your-tenant.auth0.com
+   VITE_AUTH0_CLIENT_ID=your_client_id
+   VITE_REDIRECT_URI=http://localhost:5173
+   VITE_BACKEND_URL=http://localhost:8000
+   ```
 
-## Project Overview
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-![alt text](storynestimage.png "Finalized Wireframe")
+5. **Open your browser**
 
+   Navigate to `http://localhost:5173`
 
+### Auth0 Setup
 
+1. Create a free account at [Auth0](https://auth0.com)
+2. Create a new Single Page Application
+3. Configure the following in your Auth0 application settings:
+   - **Allowed Callback URLs:** `http://localhost:5173`
+   - **Allowed Logout URLs:** `http://localhost:5173`
+   - **Allowed Web Origins:** `http://localhost:5173`
+4. Copy your Domain and Client ID to your `.env` file
 
+## Project Structure
 
-
-
-
-
-
-
-
-
-
-## Project Description
-StoryNest is a locally hosted platform designed for developers to share, discuss, and refine their coding projects through interactive storytelling. The app addresses the need for community-driven learning and problem-solving within smaller, private networks or organizations. By allowing users to create, tag, and interact with stories, StoryNest fosters a supportive environment where developers can connect, learn from one another, and gain feedback on their work.
-
-## Mission Statement
-Empowering developers to collaborate, learn, and grow through the art of storytelling.
-
-## Vision Statement
-To create a thriving community where every developer’s journey is shared, celebrated, and enriched by collective knowledge.
-
-
-
-### Target Customers
-- Primarily designed with developers in mind, but versatile enough for anyone who values a collaborative environment.
-
-### Customer Needs/Desires
-- As the tech community continues to grow, there is an increasing need for platforms that foster collaboration and knowledge-sharing.
-
-## Application Features & Functionality
-
-
-Please note that some of these features were scrapped due to the restruc
-### User Authentication & Login
-### Profile Page
-### Activity Tracking
-### Create Stories (Basic CRUD Functionality)
-### Story Interactions
-- User reactions to stories
-- Comments
-- Reactions
-
-### Search Functionality
-- Search for other users
-- Search for stories
-- Search user activity (Only if friends = True)
-
-### Notifications
-- All activity notifications
-- Ability to edit which notifications you receive
-
-### Messaging
-- Message the author of a story
-
-### Main Feed
-- Stories feed where any logged-in user can interact
-- Only friends can message from their stories
-
-### Tags
-- Add tags to each story to make them searchable
-- Use tags to filter the main feed
-
-### Sharing
-- Export the story you're viewing as PDF, Word, etc.
-
-## Product Summary
-StoryNest is a locally hosted platform designed for developers to share, discuss, and refine their coding projects through interactive storytelling. The app addresses the need for community-driven learning and problem-solving within smaller, private networks or organizations. By allowing users to create, tag, and interact with stories, StoryNest fosters a supportive environment where developers can connect, learn from one another, and gain feedback on their work. With features like user authentication, story creation, and activity tracking, StoryNest empowers developers to build a network of peers and mentors, making collaboration more accessible and effective within a controlled, local setting.
-
-
-
-## Finalized Wireframe
-![alt text](StoryNestWebframe.JPG "Finalized Wireframe")
-
-## API Design
-
-# StoryNest API Endpoints
-
-## **User Endpoints**
-
-- **Get all users**
-  - `GET /api/users/`
-  - Retrieves a list of all users.
-
-- **Get a single user**
-  - `GET /api/users/{id}/`
-  - Retrieves a single user by their ID.
-
-- **Create a new user**
-  - `POST /api/users/`
-  - Creates a new user.
-
-- **Update an existing user**
-  - `PUT /api/users/{id}/`
-  - Updates an existing user by their ID.
-
-- **Delete a user**
-  - `DELETE /api/users/{id}/`
-  - Deletes a user by their ID.
-
-## **Story Endpoints**
-
-- **Get all stories**
-  - `GET /api/stories/`
-  - Retrieves a list of all stories.
-
-- **Get a single story**
-  - `GET /api/stories/{id}/`
-  - Retrieves a single story by its ID.
-
-- **Create a new story**
-  - `POST /api/stories/`
-  - Creates a new story.
-
-- **Update an existing story**
-  - `PUT /api/stories/{id}/`
-  - Updates an existing story by its ID.
-
-- **Delete a story**
-  - `DELETE /api/stories/{id}/`
-  - Deletes a story by its ID.
-
-## **Comment Endpoints**
-
-- **Get all comments for a story**
-  - `GET /api/stories/{story_id}/comments/`
-  - Retrieves all comments for a specific story.
-
-- **Get a single comment**
-  - `GET /api/comments/{id}/`
-  - Retrieves a single comment by its ID.
-
-- **Create a new comment**
-  - `POST /api/stories/{story_id}/comments/`
-  - Creates a new comment for a specific story.
-
-- **Update an existing comment**
-  - `PUT /api/comments/{id}/`
-  - Updates an existing comment by its ID.
-
-- **Delete a comment**
-  - `DELETE /api/comments/{id}/`
-  - Deletes a comment by its ID.
-
-## **Reaction Endpoints**
-
-- **Get all reactions for a story or comment**
-  - `GET /api/reactions/`
-  - Retrieves all reactions (can be filtered by story_id or comment_id).
-
-- **Create a new reaction**
-  - `POST /api/reactions/`
-  - Creates a new reaction to a story or comment.
-
-- **Delete a reaction**
-  - `DELETE /api/reactions/{id}/`
-  - Deletes a reaction by its ID.
-
-## **Notification Endpoints**
-
-- **Get all notifications for a user**
-  - `GET /api/users/{user_id}/notifications/`
-  - Retrieves all notifications for a specific user.
-
-- **Mark a notification as read**
-  - `PUT /api/notifications/{id}/read/`
-  - Marks a specific notification as read.
-
-## **Tag Endpoints**
-
-- **Get all tags**
-  - `GET /api/tags/`
-  - Retrieves a list of all tags.
-
-- **Get a single tag**
-  - `GET /api/tags/{id}/`
-  - Retrieves a single tag by its ID.
-
-- **Create a new tag**
-  - `POST /api/tags/`
-  - Creates a new tag.
-
-- **Update an existing tag**
-  - `PUT /api/tags/{id}/`
- 
-
-### User
-- Fields: username, email, password, profile_picture, bio, date_joined
-- Relationships: friends, stories, comments, reactions, followers
-
-### Story
-- Fields: title, content, tags, author_id, created_at, updated_at, views_count, likes_count, dislikes_count, is_featured
-- Relationships: author, comments, reactions, views
-
-### Comment
-- Fields: content, author_id, story_id, created_at, likes_count, dislikes_count
-- Relationships: author, story, reactions
-
-### Reaction
-- Fields: reaction_type, user_id, story_id, comment_id, created_at
-- Relationships: user, story, comment
-
-### Notification
-- Fields: message, user_id, is_read, created_at, related_id
-- Relationships: user
-
-### Tag
-- Fields: name, created_at, description
-- Relationships: stories
-
-### Friend
-- Fields: friend_id, created_at
-- Relationships: user
-
-### Message
-- Fields: title, sender_id, receiver_id, content, created_at
-- Relationships: sender, receiver
-
+```
+storynest/
+├── src/
+│   ├── api/           # API client and endpoints
+│   ├── components/    # Reusable React components
+│   ├── context/       # React Context for state management
+│   ├── pages/         # Page components
+│   ├── assets/        # Images and static assets
+│   ├── App.jsx        # Main application component
+│   └── main.jsx       # Application entry point
+├── public/            # Static public assets
+└── index.html         # HTML template
+```
+
+## API Endpoints
+
+### Stories
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/stories/` | Get all stories |
+| GET | `/api/stories/{id}/` | Get a specific story |
+| POST | `/api/stories/` | Create a new story |
+| PUT | `/api/stories/{id}/` | Update a story |
+| DELETE | `/api/stories/{id}/` | Delete a story |
+
+### Comments
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/stories/{story_id}/comments/` | Get comments for a story |
+| POST | `/api/stories/{story_id}/comments/` | Add a comment |
+| PUT | `/api/comments/{id}/` | Update a comment |
+| DELETE | `/api/comments/{id}/` | Delete a comment |
+
+## Available Scripts
+
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run preview  # Preview production build
+npm run lint     # Run ESLint
+```
+
+## Wireframe
+
+![StoryNest Wireframe](StoryNestWebframe.JPG)
+
+## Authors
+
+- **Jay Yong**
+- **Wayne Beckom**
+
+## License
+
+This project is private and intended for local/organizational use.
