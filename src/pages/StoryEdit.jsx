@@ -1,55 +1,44 @@
 import React, { useEffect, useState } from 'react'
-import { fetchStory, updateStory } from '../api/api'
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Navbar from '../components/Navbar';
-import { useNavigate } from 'react-router-dom';
-import { useAuth0 } from '@auth0/auth0-react';
 import { useStorynest } from '../context/StorynestContext';
 
 const StoryEdit = () => {
-  const {id} = useParams();
-  const [story, setStory] = useState('');
+  const { id } = useParams();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const navigate = useNavigate();
-  const {user} = useAuth0();
-  const {token} = useStorynest();
+  const { stories, setStories } = useStorynest();
 
   useEffect(() => {
-    const getStory = async() => {
-      const response = await fetchStory(id);
-      setStory(response.data)
-      setTitle(response.data.title)
-      setContent(response.data.content)
+    // Find the story from local state
+    const storyToEdit = stories.find(s => s.id === parseInt(id));
+    if (storyToEdit) {
+      setTitle(storyToEdit.title);
+      setContent(storyToEdit.content);
     }
-    
-    getStory();
-  }, [])
+  }, [id, stories]);
 
-  const handleSave = async(e, id) => {
+  const handleSave = (e) => {
     e.preventDefault();
-    const storyData = {
-      email: user.email,
-      title: title,
-      content: content
+
+    if (title.length === 0 || content.length === 0) {
+      alert('Please fill in both title and content');
+      return;
     }
-    try {
-      const response = await updateStory(token, id, storyData);
-      console.log({response});
-      
-      if (response.status === 200) {
-        navigate(`/stories`)
-      } else {
-        alert("Error updating story")
-      }
-    } catch (error) {
-      console.log({error});
-      
-    }
+
+    // Update the story in local state
+    setStories(stories.map(s =>
+      s.id === parseInt(id)
+        ? { ...s, title, content, updated_at: new Date().toISOString() }
+        : s
+    ));
+
+    navigate('/stories');
   }
 
   return (
-    <form onSubmit={(e) => handleSave(e, story.id)}>
+    <form onSubmit={handleSave}>
       <Navbar />
       <div
         style={{
@@ -62,9 +51,11 @@ const StoryEdit = () => {
           border: "1px solid #ccc",
           borderRadius: "8px",
           backgroundColor: "#f9f9f9",
-          minWidth:"400px"
+          minWidth: "400px"
         }}
       >
+        <h2 style={{ marginBottom: "20px", color: "#333" }}>Edit Story</h2>
+
         <div style={{ marginBottom: "20px" }}>
           <label
             htmlFor="title"
@@ -124,6 +115,7 @@ const StoryEdit = () => {
           style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}
         >
           <button
+            type="button"
             onClick={() => navigate('/stories')}
             style={{
               padding: "10px 20px",
@@ -138,6 +130,7 @@ const StoryEdit = () => {
             Cancel
           </button>
           <button
+            type="submit"
             style={{
               padding: "10px 20px",
               backgroundColor: "#0079D3",
