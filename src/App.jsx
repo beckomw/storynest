@@ -42,9 +42,6 @@ function App() {
 
       <div className="features-section">
         <p>With a simple setup, you can host your own developer community platform. <code>Fully Customizable!</code></p>
-        <p className="read-the-docs">
-          Created by Jay Yong & Wayne Beckom
-        </p>
       </div>
     </>
   );

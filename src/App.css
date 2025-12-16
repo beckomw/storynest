@@ -164,6 +164,26 @@ body {
   color: #888;
 }
 
+/* Hero section text visibility fixes */
+.text-body-emphasis {
+  color: #1a1a2e !important;
+}
+
+.lead {
+  color: #444 !important;
+}
+
+.features-section {
+  color: #333;
+}
+
+.features-section code {
+  background: #e8e8e8;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #1a1a2e;
+}
+
 /* App.css */
 
 .custom-navbar {

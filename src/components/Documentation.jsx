@@ -132,7 +132,6 @@ function Documentation() {
           </section>
 
           <footer className="doc-footer">
-            <p>Created by Jay Yong & Wayne Beckom</p>
           </footer>
         </div>
       </>
