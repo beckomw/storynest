@@ -1,12 +1,14 @@
 import React, {useState, useEffect} from 'react'
 import { useAuth0 } from '@auth0/auth0-react';
 import { useStorynest } from '../context/StorynestContext';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
 
-  const { name, isAuthenticated, loginWithRedirect, logout } = useStorynest();
+  const { name, isAuthenticated, isGuest, loginWithRedirect, loginAsGuest, logout } = useStorynest();
   const {user} = useAuth0();
+  const navigate = useNavigate();
+
   useEffect(() => {
     console.log({isAuthenticated});
   }, [])
@@ -14,6 +16,12 @@ const Navbar = () => {
   const handleLogout = () => {
     logout({ returnTo: window.location.origin });
     localStorage.removeItem('jwt');
+    navigate('/');
+  }
+
+  const handleGuestLogin = () => {
+    loginAsGuest();
+    navigate('/dashboard');
   }
 
 
@@ -31,23 +39,34 @@ const Navbar = () => {
           <Link to="/">Home</Link>
         </li>
         {
-          user && 
+          (user || isGuest) &&
           <li>
             <Link to="/stories">Stories</Link>
+          </li>
+        }
+        {
+          isGuest &&
+          <li>
+            <Link to="/dashboard">Dashboard</Link>
           </li>
         }
         <li>
           <Link to="/documentation">Documentation</Link>
         </li>
 
-        
+
       </ul>
 
       <div className="navbar-right">
         {isAuthenticated ? (
           <button onClick={handleLogout}> Log Out</button>
         ) : (
-          <button onClick={() => loginWithRedirect()}> Log In </button>
+          <>
+            <button onClick={handleGuestLogin} style={{ marginRight: '10px', backgroundColor: '#6c757d' }}>
+              Guest Preview
+            </button>
+            <button onClick={() => loginWithRedirect()}> Log In </button>
+          </>
         )}
       </div>
     </div>

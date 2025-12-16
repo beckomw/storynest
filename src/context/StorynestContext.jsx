@@ -12,7 +12,7 @@ export const StorynestContext = createContext();
 
 // eslint-disable-next-line react/prop-types
 export const StorynestProvider =  ({children}) => {
-  const { isAuthenticated, user, loginWithRedirect, logout } = useAuth0();
+  const { isAuthenticated: auth0Authenticated, user, loginWithRedirect, logout: auth0Logout } = useAuth0();
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [token, setToken] = useState(localStorage?.getItem('jwt'));
@@ -20,18 +20,42 @@ export const StorynestProvider =  ({children}) => {
   const [story, setStory] = useState([]);
   const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  
+  const [isGuest, setIsGuest] = useState(localStorage?.getItem('isGuest') === 'true');
+
+  // Combined authentication status (Auth0 or Guest)
+  const isAuthenticated = auth0Authenticated || isGuest;
+
+  // Guest login function
+  const loginAsGuest = () => {
+    setIsGuest(true);
+    setName('Guest');
+    setUsername('guest');
+    localStorage.setItem('isGuest', 'true');
+  };
+
+  // Combined logout function
+  const logout = (options) => {
+    if (isGuest) {
+      setIsGuest(false);
+      setName('');
+      setUsername('');
+      localStorage.removeItem('isGuest');
+    } else {
+      auth0Logout(options);
+    }
+  };
+
   useEffect(() => {
     handleAuthentication();
     if(user){
       setName(user.given_name);
       setUsername(user.nickname);
     }
-  }, [isAuthenticated])
+  }, [auth0Authenticated])
 
 
   const handleAuthentication = async() => {
-    if(isAuthenticated && user){
+    if(auth0Authenticated && user){
       try {
         const endpoint = `${import.meta.env.VITE_BACKEND_URL}/signin`;
         console.log({endpoint});
@@ -50,7 +74,7 @@ export const StorynestProvider =  ({children}) => {
 
   return (
     <StorynestContext.Provider
-      value={{ logout, loginWithRedirect, name, isAuthenticated, user, stories, setStories, token, story, setStory, comments, setComments, username, setUsername, isLoading, setIsLoading}}
+      value={{ logout, loginWithRedirect, loginAsGuest, name, isAuthenticated, isGuest, user, stories, setStories, token, story, setStory, comments, setComments, username, setUsername, isLoading, setIsLoading}}
     >
       {children}
     </StorynestContext.Provider>
