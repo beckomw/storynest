@@ -15,11 +15,11 @@ function App() {
           className="hero-logo"
         />
         <h1 className="hero-title">StoryNest</h1>
-        <p className="hero-tagline">Share your developer journey through storytelling</p>
+        <p className="hero-tagline">Document. Debug. Deploy. Discuss.</p>
         <div className="hero-content">
           <p className="hero-description">
-            A self-hosted platform for developers to share, discuss, and refine coding projects
-            through interactive storytelling. Build community-driven learning within your team or organization.
+            A self-hosted knowledge base for engineering teams. Share architecture decisions,
+            post-mortems, code walkthroughs, and technical deep-dives. Built for devs who ship.
           </p>
           <div className="hero-buttons">
             <Link to="/stories" className="btn-hero btn-hero-primary">
@@ -33,7 +33,7 @@ function App() {
       </div>
 
       <div className="features-section">
-        <p>With a simple setup, you can host your own developer community platform. <code>Fully Customizable!</code></p>
+        <p><code>npm install</code> &rarr; <code>docker-compose up</code> &rarr; Ship internal docs in minutes.</p>
       </div>
     </>
   );
