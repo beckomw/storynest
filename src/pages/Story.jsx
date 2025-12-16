@@ -1,79 +1,41 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { useStorynest } from '../context/StorynestContext'
 import { useParams } from "react-router-dom";
-import { fetchStories, createComment, getComments, deleteComment, updateComment } from "../api/api.js";
-import { useAuth0 } from '@auth0/auth0-react';
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import Navbar from '../components/Navbar.jsx';
 import { v4 as uuidv4 } from 'uuid';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faEdit } from "@fortawesome/free-solid-svg-icons";
-import storynestLogo from "/assets/storynest.png";
 
 const Story = () => {
   const { id } = useParams();
-  const { token, stories, setStory,setStories, story, comments, setComments, isLoading, setIsLoading } = useStorynest();
+  const { stories, setStory, story, username, user, getStoryComments, addComment, allComments } = useStorynest();
   const [isFocused, setIsFocused] = useState(false);
   const [comment, setComment] = useState("");
   const [isEditing, setIsEditing] = useState(null);
   const [editedContent, setEditedContent] = useState('');
-  const {user} = useAuth0();
+  const [comments, setComments] = useState([]);
   const textareaRef = useRef(null);
 
   useEffect(() => {
-    fetchStories()
-      .then((response) => {
-        console.log({ response });
-
-        setStories(response.data);
-      })
-
-      .catch((error) => {
-        console.error("Error fetching stories:", error);
-      });
-  }, []); 
-
-  useEffect(() => {
-    try {
-      setIsLoading(true);
-      getComments(id)
-      .then((response) => {
-        console.log("COMMENTS RESPONSE ", response);
-        setComments(response.data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching comments: ", error);
-        setIsLoading(false);
-      });
-    } catch (error) {
-      console.log({error});
-      
-    }
-    
-  }, [])
+    // Load comments for this story from context
+    const storyComments = getStoryComments(id);
+    setComments(storyComments);
+  }, [id, allComments]);
 
   useEffect(() => {
     const selectedStory = stories.filter(s => s.id === parseInt(id));
-    console.log({selectedStory});
-    
     if(selectedStory){
       setStory(selectedStory)
     }
-
-  }, [id, stories])
+  }, [id, stories]);
 
   useEffect(() => {
     if (isFocused && textareaRef.current) {
-      textareaRef.current.focus(); 
+      textareaRef.current.focus();
     }
   }, [isFocused]);
 
-  useEffect(() => {
-    console.log({comments});
-    
-  }, [])
- 
   const handleFocus = () => {
     setIsFocused(true);
   };
@@ -83,84 +45,48 @@ const Story = () => {
     setComment("");
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = (e) => {
     if(comment.length === 0){
       e.preventDefault();
       return;
     }
     e.preventDefault();
-    console.log({comment});
+
     const commentData = {
-      email: user.email,
-      author: user.nickname,
-      story_id: id,
-      content: comment
-    }
-    const clientData = {
       id: uuidv4(),
       email: user.email,
-      author: user.nickname,
+      author: username,
       story_id: id,
       content: comment,
       likes_count: 0,
       dislikes_count: 0
     };
-    handleBlur(); 
-    setComments((prevComments) => [...prevComments, clientData]);
-    try {
-      await createComment(token, commentData, id);
-    } catch (error) {
-      console.log({error});
-      
-    }
-    
+
+    handleBlur();
+    addComment(id, commentData);
   };
 
-  const handleEdit = async(id) => {
-    setIsEditing(id);
-    const commentToEdit = comments.find((comment) => comment.id === id);
-    
+  const handleEdit = (commentId) => {
+    setIsEditing(commentId);
+    const commentToEdit = comments.find((c) => c.id === commentId);
     setEditedContent(commentToEdit?.content);
-  }
+  };
 
-  const handleDelete = async (e, id) => {
+  const handleDelete = (e, commentId) => {
     e.stopPropagation();
-    const updatedComments = comments.filter((comment) => comment.id !== id);
-    setComments(updatedComments);
-
-    try {
-      const response = await deleteComment(token, id);
-      console.log({ response });
-    } catch (error) {
-      console.error("Error deleting story:", error);
-    }
+    setComments(comments.filter((c) => c.id !== commentId));
   };
 
   const handleCancel = () => {
     setIsEditing(null);
-  }
+  };
 
-  const handleSave = async(id) => {
+  const handleSave = (commentId) => {
+    setComments(comments.map(c =>
+      c.id === commentId ? { ...c, content: editedContent } : c
+    ));
     setIsEditing(null);
-    const updatedComment = comments.find((comment) => comment.id === isEditing);
-    updatedComment.content = editedContent;
-    setComments([...comments]);
-    const commentData = {
-      email: user.email,
-      author: user.nickname,
-      story_id: id,
-      content: editedContent
-    }
-    try {
-      const response = await updateComment(token, id, commentData);
-      console.log({response});
-      
-    } catch (error) {
-      console.log({error});
-      
-    }
-
-  }
+  };
 
   const calculateTimeAgo = (createdAt) => {
     const now = new Date();
@@ -184,16 +110,6 @@ const Story = () => {
   return (
     <main style={{ maxWidth: "1000px" }}>
       <Navbar />
-      {isLoading ? (
-        <div
-            className="logo-container"
-            style={{ display: "flex", justifyContent: "center" }}
-          >
-            <img src={storynestLogo} alt="StoryNest Logo" height="50px" />
-          </div>
-      ):
-      (
-
       <div
         style={{
           padding: "20px",
@@ -317,10 +233,10 @@ const Story = () => {
         </div>
           <div>
             {comments
-              .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
-              .map((comment) => (
+              .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
+              .map((c) => (
                 <div
-                  key={comment.id}
+                  key={c.id}
                   style={{
                     marginBottom: "15px",
                     padding: "10px",
@@ -328,7 +244,7 @@ const Story = () => {
                     textAlign: "left",
                   }}
                 >
-                  <p>{comment.author}</p>
+                  <p>{c.author}</p>
                   <div
                     style={{
                       display: "flex",
@@ -336,7 +252,7 @@ const Story = () => {
                       justifyContent: "space-between",
                     }}
                   >
-                    {isEditing === comment.id ? (
+                    {isEditing === c.id ? (
                       <input
                         value={editedContent}
                         onChange={(e) => setEditedContent(e.target.value)}
@@ -350,12 +266,12 @@ const Story = () => {
                       />
                     ) : (
                       <p style={{ fontSize: "14px", color: "#333" }}>
-                        {comment.content}
+                        {c.content}
                       </p>
                     )}
 
-                    {comment.author === user.nickname &&
-                      (isEditing === comment.id ? (
+                    {c.author === username &&
+                      (isEditing === c.id ? (
                         <div>
                           <button
                             onClick={() => handleCancel()}
@@ -372,7 +288,7 @@ const Story = () => {
                             Cancel
                           </button>
                           <button
-                            onClick={() => handleSave(comment.id)}
+                            onClick={() => handleSave(c.id)}
                             style={{
                               zIndex: "300",
                               background: "#0079D3",
@@ -398,9 +314,7 @@ const Story = () => {
                               cursor: "pointer",
                               marginRight: "10px",
                             }}
-                            onClick={() =>
-                              handleEdit(comment.id, comment.content)
-                            }
+                            onClick={() => handleEdit(c.id)}
                           >
                             <FontAwesomeIcon
                               icon={faEdit}
@@ -408,7 +322,7 @@ const Story = () => {
                             />
                           </button>
                           <button
-                            onClick={(e) => handleDelete(e, comment.id)}
+                            onClick={(e) => handleDelete(e, c.id)}
                             style={{
                               zIndex: "300",
                               background: "white",
@@ -445,7 +359,7 @@ const Story = () => {
                       <FaArrowUp size={24} color="gray" />
                     </button>
                     <span style={{ fontSize: "14px", color: "#333" }}>
-                      {comment.likes_count - comment.dislikes_count}
+                      {c.likes_count - c.dislikes_count}
                     </span>
                     <button
                       style={{
@@ -461,9 +375,6 @@ const Story = () => {
               ))}
           </div>
       </div>
-      )
-
-    }
     </main>
   );
 }

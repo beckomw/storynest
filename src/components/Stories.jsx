@@ -1,120 +1,44 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Navbar from "./Navbar.jsx";
 import { useStorynest } from "../context/StorynestContext.jsx";
-import { fetchStories, updateStoryLikes,deleteStory } from "../api/api.js";
 import { Link, useNavigate } from "react-router-dom";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCommentAlt } from "@fortawesome/free-regular-svg-icons";
 import { faTrash, faEdit } from "@fortawesome/free-solid-svg-icons";
 import "../App.css";
-import { useAuth0 } from '@auth0/auth0-react';
-import storynestLogo from "/assets/storynest.png";
-
-
 
 function Stories() {
-  const {token, stories, setStories, setStory, isLoading, setIsLoading } = useStorynest();
+  const { stories, setStories, setStory, username } = useStorynest();
   const [hoveredStoryId, setHoveredStoryId] = useState(null);
-  const {user} = useAuth0();
   const navigate = useNavigate();
-  console.log({stories});
-  
-  useEffect(() => {
-    try {
-      setIsLoading(true);
-      fetchStories()
-        .then((response) => {
-          console.log({ response });
-          setIsLoading(false);
-          setStories(response.data);
-        })
-  
-        .catch((error) => {
-          console.error("Error fetching stories:", error);
-          setIsLoading(false);
-        });
-      
-    } catch (error) {
-      
-    }
-  }, []);
 
   const handleClick = (id) => {
     const clickedStory = stories.filter((story) => story.id === id);
     setStory(clickedStory);
-
     navigate(`/stories/${id}`);
   };
 
-  const handleLikes = async(story) => {
-    if (!user) {
-      alert('Please sign in to like stories');
-      return;
-    }
-    const originalLikes = story.likes_count;
+  const handleLikes = (story) => {
     story.likes_count += 1;
     setStories([...stories]);
-    const storyData = {
-      "email": user.email,
-      "story_id": story.id,
-      "likes_count": story.likes_count,
-      "dislikes_count": story.dislikes_count,
-    };
-    try {
-      const response = await updateStoryLikes(token, story.id, storyData);
-      console.log('RESPONSE FROM updating likes ', response);
+  };
 
-    } catch (error) {
-      story.likes_count = originalLikes;
-      setStories([...stories]);
-      console.log({error});
-    }
-  }
-
-  const handleDislikes = async(story) => {
-    if (!user) {
-      alert('Please sign in to dislike stories');
-      return;
-    }
-    const originalDislikes = story.dislikes_count;
+  const handleDislikes = (story) => {
     story.dislikes_count += 1;
     setStories([...stories]);
-    const storyData = {
-      "email": user.email,
-      "story_id": story.id,
-      "likes_count": story.likes_count,
-      "dislikes_count": story.dislikes_count,
-    };
-    try {
-      const response = await updateStoryLikes(token, story.id, storyData);
-      console.log('RESPONSE FROM updating dislikes ', response);
+  };
 
-    } catch (error) {
-      story.dislikes_count = originalDislikes;
-      setStories([...stories]);
-      console.log({error});
-
-    }
-  }
-
-  const handleEdit = async(e, id) => {
+  const handleEdit = (e, id) => {
     e.stopPropagation();
     navigate(`/stories/${id}/edit`);
-  }
+  };
 
-  const handleDelete = async(e, id) => {
+  const handleDelete = (e, id) => {
     e.stopPropagation();
-    const updatedStories = stories.filter((story) => story.id!== id);
+    const updatedStories = stories.filter((story) => story.id !== id);
     setStories(updatedStories);
-    try {
-      const response = await deleteStory(token, id);
-      console.log({response});
-      
-    } catch (error) {
-      console.error("Error deleting story:", error);
-    }
-  }
+  };
 
   const calculateTimeAgo = (createdAt) => {
     const now = new Date();
@@ -166,16 +90,6 @@ function Stories() {
           </button>
         </Link>
       </div>
-      {
-        isLoading ? (
-          <div
-            className="logo-container"
-            style={{ display: "flex", justifyContent: "center" }}
-          >
-            <img src={storynestLogo} alt="StoryNest Logo" height="50px" />
-          </div>  
-        ) :
-        (
 
       <div
         style={{
@@ -194,7 +108,6 @@ function Stories() {
           {stories
             ?.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
             .map((story) => {
-              
               const timeAgo = calculateTimeAgo(story.created_at);
               return (
                 <div
@@ -236,7 +149,7 @@ function Stories() {
                     >
                       {story.title}
                     </h3>
-                    {user && story.author === user.nickname ? (
+                    {story.author === username && (
                       <div>
                         <button
                           onClick={(e) => handleEdit(e, story.id)}
@@ -265,8 +178,6 @@ function Stories() {
                           />
                         </button>
                       </div>
-                    ) : (
-                      ""
                     )}
                   </div>
 
@@ -356,10 +267,7 @@ function Stories() {
               );
             })}
         </div>
-        </div>
-        )
-      }
-      
+      </div>
     </main>
   );
 }

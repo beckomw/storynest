@@ -1,0 +1,21 @@
+# Netlify configuration for StoryNest
+
+[build]
+  # Build command
+  command = "npm run build"
+  # Output directory (Vite outputs to dist by default)
+  publish = "dist"
+
+# SPA redirect - all routes go to index.html for React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Environment variable context for production
+[context.production.environment]
+  NODE_VERSION = "18"
+
+# Environment variable context for deploy previews
+[context.deploy-preview.environment]
+  NODE_VERSION = "18"
