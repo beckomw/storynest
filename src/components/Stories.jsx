@@ -48,6 +48,10 @@ function Stories() {
   };
 
   const handleLikes = async(story) => {
+    if (!user) {
+      alert('Please sign in to like stories');
+      return;
+    }
     const originalLikes = story.likes_count;
     story.likes_count += 1;
     setStories([...stories]);
@@ -60,15 +64,19 @@ function Stories() {
     try {
       const response = await updateStoryLikes(token, story.id, storyData);
       console.log('RESPONSE FROM updating likes ', response);
-      
+
     } catch (error) {
       story.likes_count = originalLikes;
       setStories([...stories]);
       console.log({error});
     }
-  } 
+  }
 
   const handleDislikes = async(story) => {
+    if (!user) {
+      alert('Please sign in to dislike stories');
+      return;
+    }
     const originalDislikes = story.dislikes_count;
     story.dislikes_count += 1;
     setStories([...stories]);
@@ -81,12 +89,12 @@ function Stories() {
     try {
       const response = await updateStoryLikes(token, story.id, storyData);
       console.log('RESPONSE FROM updating dislikes ', response);
-      
+
     } catch (error) {
       story.dislikes_count = originalDislikes;
       setStories([...stories]);
       console.log({error});
-      
+
     }
   }
 
@@ -228,7 +236,7 @@ function Stories() {
                     >
                       {story.title}
                     </h3>
-                    {story.author === user.nickname ? (
+                    {user && story.author === user.nickname ? (
                       <div>
                         <button
                           onClick={(e) => handleEdit(e, story.id)}
