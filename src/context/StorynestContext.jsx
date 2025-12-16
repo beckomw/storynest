@@ -18,9 +18,9 @@ const DEMO_USER = {
 const DEMO_STORIES = [
   {
     id: 1,
-    title: "[Post-Mortem] Search API P99 Latency Spike - Nov 2024",
-    content: "TL;DR: G1GC promotion failures caused 800ms+ P99 latencies during peak traffic.\n\nRoot Cause: Our search-ranking service was configured with -XX:MaxGCPauseMillis=200 but heap was undersized at 8GB. During Black Friday traffic (3x normal), the young gen couldn't keep up with allocation rate, triggering frequent full GCs.\n\nFix: Increased heap to 16GB, tuned -XX:G1HeapRegionSize=16m, and added -XX:+UseStringDeduplication. P99 dropped from 847ms to 112ms.\n\nAction Items:\n- Added GC pause alerting to Datadog\n- Created runbook for JVM tuning under load\n- Scheduled capacity review for all tier-1 services",
-    author: "mchen_infra",
+    title: "Post-Mortem: Search P99 hit 800ms on Black Friday",
+    content: "Undersized heap (8GB) + 3x traffic = G1GC couldn't keep up. Bumped to 16GB, tuned region size. P99 back to 112ms. Added GC alerting so we catch this earlier next time.",
+    author: "mchen",
     likes_count: 127,
     dislikes_count: 3,
     comments_count: 34,
@@ -28,9 +28,9 @@ const DEMO_STORIES = [
   },
   {
     id: 2,
-    title: "RFC: Migrating to Graviton3 instances - Performance Analysis",
-    content: "After 6 weeks of benchmarking, here's what we found migrating from c6i.4xlarge to c7g.4xlarge:\n\nWins:\n- 23% better price/performance on stateless API services\n- 15% reduction in P99 latency for CPU-bound workloads\n- Native ARM64 builds reduced image size by ~18%\n\nChallenges:\n- JNI dependencies in legacy payment service need recompilation\n- async-profiler required patches for ARM64 flamegraphs\n- Some Python ML deps still x86-only (workaround: mixed node pools)\n\nRecommendation: Proceed with migration for all JVM services. ETA 6-8 weeks for full rollout. See attached Grafana dashboard for detailed metrics.",
-    author: "priya_perf",
+    title: "Graviton3 benchmarks are in",
+    content: "6 weeks of testing c7g vs c6i: 23% better price/perf, 15% lower P99 on CPU-bound services. ARM64 images 18% smaller. Some ML deps still need x86 but we can use mixed node pools. Recommending we migrate all JVM services.",
+    author: "priya",
     likes_count: 89,
     dislikes_count: 2,
     comments_count: 28,
@@ -38,9 +38,9 @@ const DEMO_STORIES = [
   },
   {
     id: 3,
-    title: "Deep Dive: How we cut K8s pod startup time by 60%",
-    content: "Our booking service was taking 45s to become ready. Here's how we got it to 18s:\n\n1. JVM CDS (Class Data Sharing)\n   - Generated shared archive during build\n   - Added -XX:SharedArchiveFile to entrypoint\n   - Saved ~8s on class loading\n\n2. Spring lazy initialization\n   - spring.main.lazy-initialization=true for non-critical beans\n   - Explicit @Lazy on heavy dependencies\n   - Saved ~12s\n\n3. Probes tuning\n   - Switched liveness from HTTP to exec\n   - Reduced initialDelaySeconds from 30 to 10\n   - Saved ~7s perceived time\n\nPR: #4521 | Dashboard: grafana.internal/d/pod-startup",
-    author: "alex_k8s",
+    title: "Cut pod startup from 45s to 18s",
+    content: "Three changes: JVM class data sharing (-8s), Spring lazy init (-12s), tuned probe timing (-7s). PR #4521 adds CDS to our base image. Should help with scale-up latency during traffic spikes.",
+    author: "alex",
     likes_count: 156,
     dislikes_count: 1,
     comments_count: 42,
@@ -48,9 +48,9 @@ const DEMO_STORIES = [
   },
   {
     id: 4,
-    title: "Flame Graph Analysis: Messaging Service CPU Regression",
-    content: "After last week's deploy, messaging-service CPU jumped 34%. Used async-profiler to dig in.\n\nFindings:\n```\n40.2% - com.fasterxml.jackson.databind.ser.std.StringSerializer\n22.1% - java.util.regex.Pattern.matcher (!!)\n18.4% - io.netty.buffer.PooledByteBufAllocator\n```\n\nThe regex was new - someone added email validation in the hot path using Pattern.compile() inside the loop. Classic mistake.\n\nFix: Pre-compiled pattern + moved validation to API gateway. CPU back to baseline.\n\nLesson: We need to add CPU regression tests to CI. Created JIRA-4892 to track.",
-    author: "sarah_perf",
+    title: "Found the CPU regression in messaging-service",
+    content: "Someone put Pattern.compile() in a hot loop. Classic. Flame graph showed 22% of CPU in regex matching. Pre-compiled the pattern, moved validation upstream. CPU back to normal. We should add perf regression tests to CI.",
+    author: "sarah",
     likes_count: 203,
     dislikes_count: 0,
     comments_count: 51,
@@ -58,9 +58,9 @@ const DEMO_STORIES = [
   },
   {
     id: 5,
-    title: "Load Test Results: Homepage Redesign (Q4 Release)",
-    content: "Ran production load tests for the new homepage. 10K RPS sustained for 2 hours.\n\nResults Summary:\n| Metric | Baseline | New | Delta |\n|--------|----------|-----|-------|\n| P50    | 45ms     | 52ms| +15%  |\n| P99    | 180ms    | 165ms| -8%  |\n| Error Rate | 0.02% | 0.01% | -50% |\n| Pod CPU | 45% | 62% | +38% |\n\nConcern: CPU increase is significant. Root cause is the new personalization module doing ML inference on each request. Recommendation: Add Redis cache for model outputs (TTL 5min). Working with ML team on implementation.\n\nGreen light with caching fix. Load test artifacts in S3://perf-tests/homepage-q4/",
-    author: "david_sre",
+    title: "Homepage load test: green with caveats",
+    content: "10K RPS for 2 hours. P99 improved 8%, errors down 50%, but CPU up 38%. The new personalization module is expensive. Adding Redis cache for model outputs before we ship. Should bring CPU back in line.",
+    author: "david",
     likes_count: 78,
     dislikes_count: 4,
     comments_count: 19,
@@ -68,9 +68,9 @@ const DEMO_STORIES = [
   },
   {
     id: 6,
-    title: "TIL: Linux kernel 6.1 transparent hugepages broke our JVM",
-    content: "Spent 2 days debugging random latency spikes after OS upgrade. Turned out to be THP compaction stalls.\n\nSymptoms:\n- Random 200-500ms stalls\n- No correlation with GC logs\n- Only on upgraded hosts\n\nDiagnosis:\n```bash\nperf record -g -p <pid>\n# showed khugepaged and compact_zone taking forever\n```\n\nFix:\n```bash\necho madvise > /sys/kernel/mm/transparent_hugepage/enabled\necho madvise > /sys/kernel/mm/transparent_hugepage/defrag\n```\n\nAdded to our AMI build. Also added perf counters for THP to our node_exporter config so we catch this faster next time.\n\nRelated: https://bugs.openjdk.org/browse/JDK-8256155",
-    author: "jun_linux",
+    title: "THP was causing our latency spikes",
+    content: "2 days chasing random 200-500ms stalls after the kernel upgrade. No correlation with GC. Turned out to be transparent hugepage compaction. Set THP to madvise, added to AMI. Also wired up perf counters so we see this faster next time.",
+    author: "jun",
     likes_count: 234,
     dislikes_count: 2,
     comments_count: 67,
@@ -78,9 +78,9 @@ const DEMO_STORIES = [
   },
   {
     id: 7,
-    title: "Cost Optimization: $2.3M/year saved with spot instances",
-    content: "Finally got approval to share our spot instance strategy for batch workloads.\n\nWhat we did:\n1. Identified interruptible workloads (ETL, ML training, integration tests)\n2. Built Karpenter provisioner with spot + fallback to on-demand\n3. Added checkpointing to long-running jobs\n4. Diversified across 12 instance types for capacity\n\nResults (6 month avg):\n- Batch compute: 73% on spot (was 0%)\n- Interruption rate: 4.2%\n- Jobs affected: 0.8% (checkpointing works)\n- Annual savings: $2.3M\n\nConfig in terraform-infra/modules/karpenter-spot/. Happy to do a walkthrough for other teams.",
-    author: "rachel_finops",
+    title: "Spot instances saving us $2.3M/year",
+    content: "Moved batch workloads to spot with Karpenter. 73% of compute now spot, 4% interruption rate, <1% job failures thanks to checkpointing. Config in terraform-infra/modules/karpenter-spot if anyone wants to do the same.",
+    author: "rachel",
     likes_count: 312,
     dislikes_count: 5,
     comments_count: 89,
@@ -88,9 +88,9 @@ const DEMO_STORIES = [
   },
   {
     id: 8,
-    title: "ZGC vs G1GC: Real-world comparison on reservation-service",
-    content: "Ran ZGC in shadow mode for 2 weeks. Here's the data:\n\nSetup: reservation-service, 32GB heap, ~2K RPS\n\nLatency (ms):\n| Percentile | G1GC | ZGC |\n|------------|------|-----|\n| P50 | 12 | 11 |\n| P99 | 89 | 34 |\n| P99.9 | 245 | 41 |\n| Max | 1,847 | 156 |\n\nThroughput: G1 slightly better (2% more RPS at same CPU)\n\nMemory overhead: ZGC uses ~15% more RSS\n\nVerdict: ZGC wins for latency-sensitive services. The P99.9 improvement alone justifies the memory overhead. Rolling out to all booking-path services.\n\nFlags used:\n```\n-XX:+UseZGC -XX:+ZGenerational -Xmx32g -Xms32g\n```",
-    author: "kevin_jvm",
+    title: "ZGC results: worth it for booking path",
+    content: "Ran ZGC vs G1 on reservation-service for 2 weeks. P99 dropped from 89ms to 34ms, P99.9 from 245ms to 41ms. Uses 15% more memory but the tail latency improvement is worth it. Rolling out to all latency-sensitive services.",
+    author: "kevin",
     likes_count: 178,
     dislikes_count: 3,
     comments_count: 45,
@@ -101,32 +101,32 @@ const DEMO_STORIES = [
 // Sample comments for demo
 const DEMO_COMMENTS = {
   1: [
-    { id: 101, author: "lisa_sre", content: "We hit the same issue on payments-service. One thing that helped us was adding -XX:+UseNUMA on our multi-socket hosts. Worth checking if you haven't already.", likes_count: 18, dislikes_count: 0, story_id: 1, created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() },
-    { id: 102, author: "tom_platform", content: "Thanks for the detailed writeup. Added link to our internal wiki. Can we get the Datadog dashboard ID for the GC alerting?", likes_count: 8, dislikes_count: 0, story_id: 1, created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 30 * 60 * 1000).toISOString() }
+    { id: 101, author: "lisa", content: "Same thing hit payments last month. Also try -XX:+UseNUMA if you're on multi-socket.", likes_count: 18, dislikes_count: 0, story_id: 1, created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() },
+    { id: 102, author: "tom", content: "Can you share the Datadog dashboard?", likes_count: 8, dislikes_count: 0, story_id: 1, created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 30 * 60 * 1000).toISOString() }
   ],
   2: [
-    { id: 201, author: "nina_data", content: "Our Spark jobs are still x86-only due to some native libs. Any workarounds besides mixed node pools? We're burning money on c6i instances.", likes_count: 12, dislikes_count: 0, story_id: 2, created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() }
+    { id: 201, author: "nina", content: "Any workarounds for Spark? Native libs keeping us on x86.", likes_count: 12, dislikes_count: 0, story_id: 2, created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() }
   ],
   3: [
-    { id: 301, author: "marco_backend", content: "The CDS tip is gold. Just tried it on inventory-service and cut startup from 38s to 22s. PR incoming to add this to our base Docker image.", likes_count: 24, dislikes_count: 0, story_id: 3, created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString() },
-    { id: 302, author: "amy_devex", content: "Have you looked at GraalVM native-image? We're evaluating it for our CLI tools. Startup is sub-100ms but build times are painful.", likes_count: 9, dislikes_count: 0, story_id: 3, created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString() }
+    { id: 301, author: "marco", content: "CDS is great. Got inventory-service down to 22s. Adding to base image.", likes_count: 24, dislikes_count: 0, story_id: 3, created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString() },
+    { id: 302, author: "amy", content: "Looked at GraalVM native-image? Sub-100ms startup but builds are slow.", likes_count: 9, dislikes_count: 0, story_id: 3, created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString() }
   ],
   4: [
-    { id: 401, author: "james_oncall", content: "I reviewed that PR - the regex wasn't in the original code review because it was buried in a utility class. +1 on CPU regression tests in CI. We could use continuous profiling to catch these automatically.", likes_count: 31, dislikes_count: 0, story_id: 4, created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() }
+    { id: 401, author: "james", content: "Missed this in review - it was buried in a util class. +1 on perf regression tests.", likes_count: 31, dislikes_count: 0, story_id: 4, created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString() }
   ],
   5: [
-    { id: 501, author: "chris_ml", content: "Redis cache makes sense. We could also look at batching inference calls - the model supports batch sizes up to 32. Might help with the CPU spike during burst traffic.", likes_count: 14, dislikes_count: 0, story_id: 5, created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() }
+    { id: 501, author: "chris", content: "Model supports batching up to 32. Might help more than caching for burst traffic.", likes_count: 14, dislikes_count: 0, story_id: 5, created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() }
   ],
   6: [
-    { id: 601, author: "pat_kernel", content: "Good catch. We should probably also set vm.compaction_proactiveness=0 to prevent background compaction. Adding to the AMI hardening checklist.", likes_count: 27, dislikes_count: 0, story_id: 6, created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-    { id: 602, author: "mchen_infra", content: "This bit us too last quarter. Wrote it up in the kernel upgrade runbook but clearly we need better visibility. Nice work on the perf counters.", likes_count: 15, dislikes_count: 0, story_id: 6, created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() }
+    { id: 601, author: "pat", content: "Also set vm.compaction_proactiveness=0. Adding to AMI checklist.", likes_count: 27, dislikes_count: 0, story_id: 6, created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: 602, author: "mchen", content: "This got us last quarter too. Good call on the perf counters.", likes_count: 15, dislikes_count: 0, story_id: 6, created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() }
   ],
   7: [
-    { id: 701, author: "omar_data", content: "Would love that walkthrough! Our nightly ETL jobs would be perfect for this. What's your interruption handling strategy for multi-hour Spark jobs?", likes_count: 22, dislikes_count: 0, story_id: 7, created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() }
+    { id: 701, author: "omar", content: "How do you handle interrupts on multi-hour Spark jobs?", likes_count: 22, dislikes_count: 0, story_id: 7, created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString() }
   ],
   8: [
-    { id: 801, author: "priya_perf", content: "Great data. One thing to watch with ZGC - it's more sensitive to NUMA topology. Make sure you're pinning to a single socket or using -XX:+UseNUMAInterleaving.", likes_count: 19, dislikes_count: 0, story_id: 8, created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-    { id: 802, author: "alex_k8s", content: "Are you using ZGenerational? We saw some instability with it in JDK 21.0.1 but 21.0.2 fixed most issues.", likes_count: 11, dislikes_count: 0, story_id: 8, created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
+    { id: 801, author: "priya", content: "Watch out for NUMA topology with ZGC. Pin to single socket or use -XX:+UseNUMAInterleaving.", likes_count: 19, dislikes_count: 0, story_id: 8, created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: 802, author: "alex", content: "Using ZGenerational? Had issues on 21.0.1, fixed in 21.0.2.", likes_count: 11, dislikes_count: 0, story_id: 8, created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }
   ]
 };
 
